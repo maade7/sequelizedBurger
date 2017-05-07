@@ -8,10 +8,17 @@ var express = require("express"),
 
 var app = express();
 app.set('port', (process.env.PORT || 8080));
+
+// Requiring our models for syncing
+var db = require("./models");
+
 // Serve static content for the app from the "public" directory in the application directory.
 app.use(express.static(__dirname + '/public'));
 
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.text());
+app.use(bodyParser.json({ type: "application/vnd.api+json" }));
 
 // Override with POST having ?_method=DELETE
 app.use(methodOverride("_method"));
@@ -23,11 +30,13 @@ app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
 // Import routes and give the server access to them.
-var routes = require("./controllers/burgers_controller.js");
+var routes = require("./routes/html-routes.js");
 
 app.use("/", routes);
 
 // app.listen(port);
-app.listen(app.get('port'), function () {
-    console.log('Node app is running on port', app.get('port'));
+db.sequelize.sync({}).then(function () {
+    app.listen(app.get('port'), function () {
+        console.log('Node app is running on port', app.get('port'));
+    });
 });
